@@ -43,10 +43,10 @@ Widget micWidget(){
     decoration: BoxDecoration(
       color: const Color(0xff333333),
       borderRadius: BorderRadius.circular(150),
-      gradient: LinearGradient(
+      gradient: const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: const [
+        colors: [
           Color(0xff111111),
           Color(0xff555555),
         ],
@@ -78,8 +78,4 @@ Future<String> getAgoraToken() async {
   var snapshot = await FirebaseDatabase.instance.ref("agora").get();
   agoraToken = snapshot.value as String;
   return agoraToken;
-}
-
-connectChannel(){
-
 }
