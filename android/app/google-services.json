@@ -1,0 +1,203 @@
+{
+  "project_info": {
+    "project_number": "576223570043",
+    "firebase_url": "https://p-u-r-e-t-e-s-t-default-rtdb.firebaseio.com",
+    "project_id": "p-u-r-e-t-e-s-t",
+    "storage_bucket": "p-u-r-e-t-e-s-t.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576223570043:android:5b3fbb756ab4649d3b1ade",
+        "android_client_info": {
+          "package_name": "com.example.untitled_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "576223570043-5lbeh3vds4mm239mqob7co7sj2oh9tep.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.untitled_project",
+            "certificate_hash": "993ab5c06c140d8b37c49caede4af3a06da63a20"
+          }
+        },
+        {
+          "client_id": "576223570043-bh4su2oc43bht71vlcp8berd8o9hnd3d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxaumGeP84ag0g_OKprwb9u01Mf8tPdJc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "576223570043-bh4su2oc43bht71vlcp8berd8o9hnd3d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "576223570043-a0qlcrj40ni0c277f89g362jspjt8gpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "ph.in.buddy.phonebuddy"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576223570043:android:78571db72d355bf43b1ade",
+        "android_client_info": {
+          "package_name": "com.orion.market"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "576223570043-5pspo9e4naj623jmpk7kdhfhqai2eoog.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.orion.market",
+            "certificate_hash": "ad35685512420a611a27e3958b771d8aae31ce92"
+          }
+        },
+        {
+          "client_id": "576223570043-bh4su2oc43bht71vlcp8berd8o9hnd3d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxaumGeP84ag0g_OKprwb9u01Mf8tPdJc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "576223570043-bh4su2oc43bht71vlcp8berd8o9hnd3d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "576223570043-a0qlcrj40ni0c277f89g362jspjt8gpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "ph.in.buddy.phonebuddy"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576223570043:android:231dc4b6d7a466b13b1ade",
+        "android_client_info": {
+          "package_name": "com.webplustech.ludokinggame"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "576223570043-e4p6kc5s4dce3hq5vvkfaonog4mapr3k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.webplustech.ludokinggame",
+            "certificate_hash": "bfd0afd2dd87aba1cd24abc9a7001c5c86d1d665"
+          }
+        },
+        {
+          "client_id": "576223570043-bh4su2oc43bht71vlcp8berd8o9hnd3d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxaumGeP84ag0g_OKprwb9u01Mf8tPdJc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "576223570043-bh4su2oc43bht71vlcp8berd8o9hnd3d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "576223570043-a0qlcrj40ni0c277f89g362jspjt8gpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "ph.in.buddy.phonebuddy"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576223570043:android:927df70e3bbdcf613b1ade",
+        "android_client_info": {
+          "package_name": "ph.in.buddy.phonebuddy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "576223570043-noo4mem383ijtg1q0pohnrq61l80fs1f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ph.in.buddy.phonebuddy",
+            "certificate_hash": "644ebd19d75d41ba8a36de914a1813b404edffeb"
+          }
+        },
+        {
+          "client_id": "576223570043-o8s84bu4isc6om5jmckl2nuh6929hg0q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ph.in.buddy.phonebuddy",
+            "certificate_hash": "ad35685512420a611a27e3958b771d8aae31ce92"
+          }
+        },
+        {
+          "client_id": "576223570043-qih5u7guoc3mnugqt4hvt96ie85jnv8i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ph.in.buddy.phonebuddy",
+            "certificate_hash": "9d8b37046acbc0aea91a6f413c39c7b52be946ee"
+          }
+        },
+        {
+          "client_id": "576223570043-bh4su2oc43bht71vlcp8berd8o9hnd3d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxaumGeP84ag0g_OKprwb9u01Mf8tPdJc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "576223570043-bh4su2oc43bht71vlcp8berd8o9hnd3d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "576223570043-a0qlcrj40ni0c277f89g362jspjt8gpq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "ph.in.buddy.phonebuddy"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
