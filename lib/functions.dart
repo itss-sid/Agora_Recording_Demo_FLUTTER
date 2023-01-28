@@ -36,21 +36,13 @@ Widget errorWidget(){
   );
 }
 
-Widget micWidget(){
+Widget micWidget(bool isOn){
   return Container(
     width: 100,
     height: 100,
     decoration: BoxDecoration(
-      color: const Color(0xff333333),
+      color: isOn?Colors.white:Colors.black,
       borderRadius: BorderRadius.circular(150),
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color(0xff111111),
-          Color(0xff555555),
-        ],
-      ),
       boxShadow: const [
         BoxShadow(
           color: Color(0xff555555),
@@ -66,10 +58,10 @@ Widget micWidget(){
         ),
       ],
     ),
-    child: const Icon(
+    child: Icon(
       Icons.mic,
       size: 40,
-      color: Colors.amber,
+      color: isOn?Colors.black:Colors.amber,
     ),
   );
 }
@@ -78,4 +70,79 @@ Future<String> getAgoraToken() async {
   var snapshot = await FirebaseDatabase.instance.ref("agora").get();
   agoraToken = snapshot.value as String;
   return agoraToken;
+}
+
+Widget registrationLayout(Function(String text) onChanged, Function()? onPressed){
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Spacer(),
+        const Text(
+          "Please register yourself before using this demo!",
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(
+          height: 25,
+        ),
+        TextFormField(
+          // controller: nameController,
+          onChanged: onChanged,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.next,
+          style: const TextStyle(fontSize: 12),
+          decoration: InputDecoration(
+            fillColor: Colors.grey.shade100,
+            filled: true,
+            hintText: "Any Name or Random String",
+            isDense: true,
+            counterText: '',
+            hintStyle: const TextStyle(fontSize: 12),
+            constraints: BoxConstraints(maxWidth: width * .90),
+            border: OutlineInputBorder(
+                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.circular(5)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        const SizedBox(
+          height: 25,
+        ),
+        ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 45, vertical: 15),
+                shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(35))),
+            child: const Text(
+              "Submit",
+              style: TextStyle(fontSize: 16),
+            )),
+        const Spacer(),
+      ],
+    ),
+  );
+}
+
+scroll2End(var mounted, var usersScrollController, var logsScrollController) async {
+  if (mounted) {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (usersScrollController.positions.isNotEmpty) {
+      usersScrollController.animateTo(
+          usersScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.decelerate);
+    }
+    if (logsScrollController.positions.isNotEmpty) {
+      logsScrollController.animateTo(
+          logsScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.decelerate);
+    }
+  }
 }
