@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:math';
-import 'package:agora_rtc_engine/rtc_engine.dart';
-import 'package:audio_session/audio_session.dart';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
+import 'package:untitled_project/agora_functions.dart';
 import 'package:untitled_project/splash.dart';
 import 'functions.dart';
 import 'package:flutter/material.dart';
@@ -23,23 +23,20 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  bool isRegistered = false;
-  bool isLoading = true;
+
+  bool isRegistered = false, isLoading = true;
   List<UserModel> users = List<UserModel>.empty(growable: true);
-  TextEditingController nameController = TextEditingController();
+  // TextEditingController nameController = TextEditingController();
+  String name = "";
   late UserModel userModel;
-  late final RtcEngine engine;
   int selectedUserId = 0;
-  RxList<Log> logs =
-      [Log("**********Logs Started**********", Colors.blue.shade900)].obs;
+  RxList<Log> logs = [Log("**********Logs Started**********", Colors.blue.shade900)].obs;
   RxList<int> joinedUsersIds = List<int>.empty(growable: true).obs;
-  RxBool speakerOn = false.obs;
+  RxBool speakerOn = false.obs, micOn = false.obs;
   var usersScrollController = ScrollController();
   var logsScrollController = ScrollController();
   var recorder = Record();
   FlutterSoundRecorder recorderr = FlutterSoundRecorder();
-  Codec _codec = Codec.aacMP4;
-  String _mPath = 'tau_file.mp4';
 
   @override
   void initState() {
@@ -50,55 +47,15 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> openTheRecorder() async {
-    // if (!kIsWeb) {
-    //   var status = await Permission.microphone.request();
-    //   if (status != PermissionStatus.granted) {
-    //     throw RecordingPermissionException('Microphone permission not granted');
-    //   }
-    // }
     await recorderr.openRecorder();
-    if (!await recorderr.isEncoderSupported(_codec)) {
-      _codec = Codec.opusWebM;
-      _mPath = 'tau_file.webm';
-      if (!await recorderr.isEncoderSupported(_codec)) {
-        return;
-      }
-    }
-    final session = await AudioSession.instance;
-    // await session.configure(const AudioSessionConfiguration.speech());
-    // await session.configure(AudioSessionConfiguration(
-    //   avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
-    //   avAudioSessionCategoryOptions:
-    //   AVAudioSessionCategoryOptions.allowBluetooth |
-    //   AVAudioSessionCategoryOptions.defaultToSpeaker,
-    //   avAudioSessionMode: AVAudioSessionMode.spokenAudio,
-    //   avAudioSessionRouteSharingPolicy:
-    //   AVAudioSessionRouteSharingPolicy.defaultPolicy,
-    //   avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-    //   androidAudioAttributes: const AndroidAudioAttributes(
-    //     contentType: AndroidAudioContentType.speech,
-    //     flags: AndroidAudioFlags.none,
-    //     usage: AndroidAudioUsage.voiceCommunication,
-    //   ),
-    //   androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-    //   androidWillPauseWhenDucked: true,
-    // ));
-
-    // _mRecorderIsInited = true;
   }
 
   @override
   void dispose() {
-    engine.leaveChannel();
-    engine.destroy();
+    AgoraFunctions.destroy();
     for (var user in users) {
       if (userModel.id == user.id) {
-        FirebaseDatabase.instance
-            .ref()
-            .child('demo')
-            .child('users')
-            .child(user.key)
-            .remove();
+        FirebaseDatabase.instance.ref().child('demo').child('users').child(user.key).remove();
         break;
       }
     }
@@ -131,85 +88,49 @@ class _HomeState extends State<Home> {
   }
 
   initializeAgora() async {
-    engine = await RtcEngine.createWithContext(RtcEngineContext(agoraAppId));
-    await engine.enableAudio();
-    await Permission.microphone.request();
-    await Permission.phone.request();
-    await Permission.storage.request();
-
-    engine.setEventHandler(RtcEngineEventHandler(
-      joinChannelSuccess: (String channel, int uid, int elapsed) {
+    await AgoraFunctions.initializeEngine();
+    await AgoraFunctions.setEventHandler(
+      joinChannelSuccess: (RtcConnection connection, int elapsed){
         logs.add(Log("channel joined!", Colors.green.shade900));
-        logs.add(Log("channel: $channel", Colors.black));
-        logs.add(Log("userId: $uid", Colors.black));
         startAudioRecording();
         if (userModel.name != "admin") {
-          engine.muteLocalAudioStream(true);
+          rtcEngine.muteLocalAudioStream(true);
         }
+        rtcEngine.setEnableSpeakerphone(true);
+        rtcEngine.adjustPlaybackSignalVolume(400);
+        rtcEngine.adjustRecordingSignalVolume(400);
+        rtcEngine.setInEarMonitoringVolume(400);
       },
-      userJoined: (int uid, int elapsed) {
+      userJoined: (RtcConnection connection, int uid, int elapsed) {
         logs.add(Log("user joined!", Colors.green.shade900));
         logs.add(Log("userId: $uid", Colors.black));
-        if (userModel.name != "admin") {
-          for (var user in users) {
-            if (user.id == uid) {
-              if (user.name == "admin") {
-                logs.add(Log("ADMIN: $uid", Colors.blue.shade900));
-              } else {
-                engine.muteRemoteAudioStream(uid, true);
-              }
-              break;
-            }
-          }
-        }
+        muteUser(uid);
         joinedUsersIds.add(uid);
-        engine.setEnableSpeakerphone(true);
         scrollToEnd();
       },
-      userOffline: (int uid, UserOfflineReason reason) {
+      userOffline: (RtcConnection connection, int uid, UserOfflineReasonType reason) {
         logs.add(Log("user offline!", Colors.green.shade900));
         logs.add(Log("userId: $uid", Colors.black));
         logs.add(Log("reason: ${reason.name}", Colors.black));
         joinedUsersIds.remove(uid);
         scrollToEnd();
       },
-      leaveChannel: (RtcStats states) {
+      userMuteAudio: (RtcConnection connection, int uid, bool muted) {
+        logs.add(Log("user $uid ${muted?"muted":"unmuted"} audio", Colors.green.shade900));
+        scrollToEnd();
+      },
+      error: (ErrorCodeType errorCode, String msg) {
+        logs.add(Log("Error!", Colors.green.shade900));
+        logs.add(Log("ErrorCode: ${errorCode.name}", Colors.black));
+        logs.add(Log("Message: $msg", Colors.black));
+        scrollToEnd();
+      },
+      leaveChannel: (RtcConnection connection, RtcStats stats) {
         stopAudioRecording();
         logs.add(Log("channel left!", Colors.green.shade900));
-        logs.add(Log("users count: ${states.userCount}", Colors.black));
+        logs.add(Log("users count: ${stats.userCount}", Colors.black));
       },
-      // localAudioStateChanged: (AudioLocalState state, AudioLocalError error){
-      //   logs.add(Log("audio state changed!", Colors.green.shade900));
-      //   logs.add(Log("state: $state", Colors.black));
-      //   logs.add(Log("error: $error", Colors.black));
-      //   scrollToEnd();
-      // },
-      userMuteAudio: (int uid, bool muted) {
-        logs.add(Log("user muted state changed!", Colors.green.shade900));
-        logs.add(Log("userId: $uid", Colors.black));
-        logs.add(Log("muted: $muted", Colors.black));
-        scrollToEnd();
-      },
-      error: (ErrorCode code) {
-        logs.add(Log("Error!", Colors.green.shade900));
-        logs.add(Log("Error: ${code.name}", Colors.black));
-        scrollToEnd();
-      },
-    ));
-  }
-
-  joinChannel() async {
-    // await engine.joinChannel(
-    //   token: agoraToken,
-    //   channelId: 'test',
-    //   uid: Random().nextInt(10),
-    //   options: const ChannelMediaOptions(
-    //     channelProfile: ChannelProfileType.channelProfileCommunication,
-    //     clientRoleType: ClientRoleType.clientRoleAudience
-    //   ),
-    // );
-    await engine.joinChannel(
-        agoraToken, 'test', null, userModel.id, ChannelMediaOptions());
+    );
   }
 
   Widget streamBuilder() {
@@ -231,7 +152,7 @@ class _HomeState extends State<Home> {
                       children: [
                         TextButton(
                             onPressed: () async {
-                              await engine.leaveChannel();
+                              await rtcEngine.leaveChannel();
                               Get.offAll(() => const Splash());
                             },
                             style: TextButton.styleFrom(
@@ -262,6 +183,7 @@ class _HomeState extends State<Home> {
                             scrollDirection: Axis.horizontal,
                             controller: usersScrollController,
                             itemBuilder: (BuildContext context, int index) {
+                              removeUser(index);
                               return InkWell(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -279,45 +201,35 @@ class _HomeState extends State<Home> {
                                                 decoration: BoxDecoration(
                                                     shape: BoxShape.circle,
                                                     border: Border.all(
-                                                        color: selectedUserId ==
-                                                                users[index].id
-                                                            ? Colors
-                                                                .blue.shade900
-                                                            : joinedUsersIds
-                                                                    .contains(
-                                                                        users[index]
-                                                                            .id)
-                                                                ? Colors.green
-                                                                    .shade900
+                                                        color: selectedUserId == users[index].id
+                                                            ? Colors.blue.shade900
+                                                            : joinedUsersIds.contains(users[index].id)
+                                                                ? Colors.green.shade900
                                                                 : Colors.black,
-                                                        width: 2)),
+                                                        width: 2)
+                                                ),
                                                 child: Icon(Icons.person,
-                                                    color: selectedUserId ==
-                                                            users[index].id
+                                                    color: selectedUserId == users[index].id
                                                         ? Colors.blue.shade900
-                                                        : joinedUsersIds
-                                                                .contains(
-                                                                    users[index]
-                                                                        .id)
-                                                            ? Colors
-                                                                .green.shade900
-                                                            : Colors.black),
+                                                        : joinedUsersIds.contains(users[index].id)
+                                                            ? Colors.green.shade900
+                                                            : Colors.black
+                                                ),
                                               ),
                                             ),
                                             TextSpan(
                                                 text: "\n${users[index].name}",
                                                 style: TextStyle(
-                                                    color: selectedUserId ==
-                                                            users[index].id
+                                                    color: selectedUserId == users[index].id
                                                         ? Colors.blue.shade900
-                                                        : joinedUsersIds
-                                                                .contains(
-                                                                    users[index]
-                                                                        .id)
-                                                            ? Colors
-                                                                .green.shade900
-                                                            : Colors.black))
-                                          ]))),
+                                                        : joinedUsersIds.contains(users[index].id)
+                                                            ? Colors.green.shade900
+                                                            : Colors.black
+                                                )
+                                            )
+                                          ])
+                                      )
+                                  ),
                                 ),
                               );
                             },
@@ -332,44 +244,42 @@ class _HomeState extends State<Home> {
                                   padding: const EdgeInsets.all(20),
                                   shrinkWrap: true,
                                   controller: logsScrollController,
-                                  itemBuilder:
-                                      (BuildContext context, int index) {
+                                  itemBuilder: (BuildContext context, int index) {
                                     return Text(
                                       logs[index].value,
                                       textAlign: TextAlign.center,
-                                      style:
-                                          TextStyle(color: logs[index].color),
+                                      style: TextStyle(color: logs[index].color),
                                     );
                                   },
                                 ),
                               ),
-                              TextButton(
-                                  onPressed: () async {
-                                    speakerOn.value = !speakerOn.value;
-                                    await engine
-                                        .setEnableSpeakerphone(speakerOn.value);
-                                    if (speakerOn.value) {
-                                      await engine
-                                          .adjustPlaybackSignalVolume(400);
-                                      await engine
-                                          .adjustRecordingSignalVolume(400);
-                                      await engine
-                                          .setInEarMonitoringVolume(400);
-                                    }
-                                  },
-                                  style: TextButton.styleFrom(
-                                      shape: CircleBorder(
-                                          side: BorderSide(
-                                              color: speakerOn.value
-                                                  ? Colors.green.shade900
-                                                  : Colors.red.shade900,
-                                              width: 1))),
-                                  child: Icon(
-                                    Icons.volume_down_outlined,
-                                    color: speakerOn.value
-                                        ? Colors.green.shade900
-                                        : Colors.red.shade900,
-                                  )),
+                              // TextButton(
+                              //     onPressed: () async {
+                              //       speakerOn.value = !speakerOn.value;
+                              //       await rtcEngine.setEnableSpeakerphone(speakerOn.value);
+                              //       if (speakerOn.value) {
+                              //         await rtcEngine.adjustPlaybackSignalVolume(400);
+                              //         await rtcEngine.adjustRecordingSignalVolume(400);
+                              //         await rtcEngine.setInEarMonitoringVolume(400);
+                              //       }
+                              //     },
+                              //     style: TextButton.styleFrom(
+                              //         shape: CircleBorder(
+                              //             side: BorderSide(
+                              //                 color: speakerOn.value
+                              //                     ? Colors.green.shade900
+                              //                     : Colors.red.shade900,
+                              //                 width: 1
+                              //             )
+                              //         )
+                              //     ),
+                              //     child: Icon(
+                              //       Icons.volume_down_outlined,
+                              //       color: speakerOn.value
+                              //           ? Colors.green.shade900
+                              //           : Colors.red.shade900,
+                              //     )
+                              // ),
                             ],
                           ),
                         ),
@@ -377,23 +287,26 @@ class _HomeState extends State<Home> {
                           height: 15,
                         ),
                         Visibility(
-                          visible: userModel.name == "admin" ? false : true,
+                          visible: !(userModel.name == "admin"),
                           child: GestureDetector(
                             // onTap: ()=>rec(),
                             onLongPressStart: (d) async {
-                              engine.muteLocalAudioStream(false);
+                              await rtcEngine.muteLocalAudioStream(false);
+                              micOn.value = true;
                             },
                             onLongPressEnd: (d) async {
-                              engine.muteLocalAudioStream(true);
+                              await rtcEngine.muteLocalAudioStream(true);
+                              micOn.value = false;
                             },
-                            child: micWidget(),
+                            child: micWidget(micOn.value),
                           ),
                         ),
                         const SizedBox(
                           height: 25,
                         )
                       ],
-                    ));
+                    )
+                );
               }
             } else {
               return errorWidget();
@@ -405,100 +318,31 @@ class _HomeState extends State<Home> {
   }
 
   Widget registerLayout() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Spacer(),
-          const Text(
-            "Please register yourself before using this demo!",
-            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(
-            height: 25,
-          ),
-          TextFormField(
-            controller: nameController,
-            onChanged: (txt) => setState(() {}),
-            keyboardType: TextInputType.text,
-            textInputAction: TextInputAction.next,
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              fillColor: Colors.grey.shade100,
-              filled: true,
-              hintText: "Any Name or Random String",
-              isDense: true,
-              counterText: '',
-              hintStyle: const TextStyle(fontSize: 12),
-              constraints: BoxConstraints(maxWidth: width * .90),
-              border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(5)),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(5),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          const SizedBox(
-            height: 25,
-          ),
-          ElevatedButton(
-              onPressed: nameController.text.isEmpty
-                  ? null
-                  : () async {
-                      String? token =
-                          await FirebaseMessaging.instance.getToken();
-                      UserModel user = UserModel(
-                          name: nameController.text,
-                          token: "$token",
-                          id: Random().nextInt(999),
-                          key: "");
-                      await FirebaseDatabase.instance
-                          .ref()
-                          .child('demo')
-                          .child('users')
-                          .push()
-                          .set(user.toJson());
-                      setState(() {
-                        selectedUserId = user.id;
-                        userModel = user;
-                        isRegistered = true;
-                      });
-                      joinChannel();
-                    },
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 45, vertical: 15),
-                  shape: ContinuousRectangleBorder(
-                      borderRadius: BorderRadius.circular(35))),
-              child: const Text(
-                "Submit",
-                style: TextStyle(fontSize: 16),
-              )),
-          const Spacer(),
-        ],
-      ),
+    return registrationLayout(
+        (text)=>setState(()=>name=text),
+      name.isEmpty
+        ? null
+        : () async {
+      String? token = await FirebaseMessaging.instance.getToken();
+      UserModel user = UserModel(
+          name: name,
+          token: "$token",
+          id: Random().nextInt(999),
+          key: ""
+      );
+      await FirebaseDatabase.instance.ref().child('demo').child('users').push().set(user.toJson());
+      setState(() {
+        selectedUserId = user.id;
+        userModel = user;
+        isRegistered = true;
+      });
+      await AgoraFunctions.joinChannel(token: agoraToken, channelName: 'test', userId: Random().nextInt(999),);
+    },
     );
   }
 
   scrollToEnd() async {
-    if (mounted) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (usersScrollController.positions.isNotEmpty)
-        usersScrollController.animateTo(
-            usersScrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.decelerate);
-      if (logsScrollController.positions.isNotEmpty)
-        logsScrollController.animateTo(
-            logsScrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.decelerate);
-    }
+    scroll2End(mounted, usersScrollController, logsScrollController);
   }
 
   startAudioRecording() async {
@@ -530,5 +374,32 @@ class _HomeState extends State<Home> {
     //   await recorder.stop();
     // }
     await recorderr.stopRecorder();
+  }
+
+  removeUser(int index) async {
+    await Future.delayed(const Duration(seconds: 2));
+    try{
+      var shouldRemove = selectedUserId != users[index].id && !joinedUsersIds.contains(users[index].id);
+      if(shouldRemove){
+        FirebaseDatabase.instance.ref().child('demo').child('users').child(users[index].key).remove();
+      }
+    } catch(_){}
+  }
+
+  muteUser(int uid) async {
+    await Future.delayed(const Duration(seconds: 1));
+    if (userModel.name != "admin") {
+      for (var user in users) {
+        if (user.id == uid) {
+          if (user.name == "admin") {
+            logs.add(Log("ADMIN: $uid", Colors.blue.shade900));
+          } else {
+            rtcEngine.muteRemoteAudioStream(uid: uid, mute: true,);
+            logs.add(Log("USER MUTED: $uid", Colors.blue.shade900));
+          }
+          break;
+        }
+      }
+    }
   }
 }

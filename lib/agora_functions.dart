@@ -1,4 +1,6 @@
-import 'package:agora_rtc_engine/rtc_engine.dart';
+import 'dart:math';
+
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:untitled_project/strings.dart';
 
@@ -7,33 +9,36 @@ class AgoraFunctions{
 
   static checkPermission()async{
     await Permission.microphone.request();
+    await Permission.phone.request();
+    await Permission.storage.request();
   }
 
   static Future<void> initializeEngine() async {
     checkPermission();
-    rtcEngine = await RtcEngine.createWithContext(RtcEngineContext(agoraAppId));
+    rtcEngine = createAgoraRtcEngine();
+    await rtcEngine.initialize(const RtcEngineContext(appId: agoraAppId));
     await rtcEngine.enableAudio();
   }
 
   static setEventHandler({
-    void Function(String, int, int)? joinChannelSuccess,
-    void Function(int, int)? userJoined,
-    void Function(int, UserOfflineReason)? userOffline,
-    void Function(ErrorCode)? error,
-    void Function(int, bool)? userMuteAudio,
-    void Function(AudioLocalState, AudioLocalError)? localAudioStateChanged,
-    void Function(RtcStats)? leaveChannel,
-    void Function(RtcStats)? rtcStats,
+    void Function(RtcConnection, int)? joinChannelSuccess,
+    void Function(RtcConnection, int, int)? userJoined,
+    void Function(RtcConnection, int, UserOfflineReasonType)? userOffline,
+    void Function(ErrorCodeType, String)? error,
+    void Function(RtcConnection, int, bool)? userMuteAudio,
+    void Function(RtcConnection, LocalAudioStreamState, LocalAudioStreamError)? localAudioStateChanged,
+    void Function(RtcConnection, RtcStats)? leaveChannel,
+    void Function(RtcConnection, RtcStats)? rtcStats,
   })async{
-    rtcEngine.setEventHandler(RtcEngineEventHandler(
-      joinChannelSuccess: joinChannelSuccess,
-      userJoined: userJoined,
-      userOffline: userOffline,
-      userMuteAudio: userMuteAudio,
-      error: error,
-      localAudioStateChanged: localAudioStateChanged,
-      leaveChannel: leaveChannel,
-      rtcStats: rtcStats,
+    rtcEngine.registerEventHandler(RtcEngineEventHandler(
+      onJoinChannelSuccess: joinChannelSuccess,
+      onUserJoined: userJoined,
+      onUserOffline: userOffline,
+      onUserMuteAudio: userMuteAudio,
+      onError: error,
+      onLocalAudioStateChanged: localAudioStateChanged,
+      onLeaveChannel: leaveChannel,
+      onRtcStats: rtcStats,
     ));
   }
 
@@ -41,13 +46,21 @@ class AgoraFunctions{
     required String token,
     required String channelName,
     required int userId,
-    String? optionalInfo,
     ChannelMediaOptions? options
   }) async {
-    await rtcEngine.joinChannel(token,channelName, optionalInfo, userId, options);
+    await rtcEngine.joinChannel(
+      token: agoraToken,
+      channelId: 'test',
+      uid: Random().nextInt(10),
+      options: const ChannelMediaOptions(
+        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        clientRoleType: ClientRoleType.clientRoleAudience
+      ),
+    );
   }
 
   static destroy()async{
-    await rtcEngine.destroy();
+    await rtcEngine.leaveChannel();
+    await rtcEngine.release();
   }
 }

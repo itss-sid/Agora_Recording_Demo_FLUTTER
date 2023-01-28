@@ -39,7 +39,7 @@ dependencies:
   firebase_storage: ^11.0.3
   firebase_core: ^2.1.1
   firebase_database: ^10.0.3
-  agora_rtc_engine: ^5.3.1
+  agora_rtc_engine: ^6.1.0
   get: ^4.6.5
   permission_handler: ^10.2.0
   http: ^0.13.5
