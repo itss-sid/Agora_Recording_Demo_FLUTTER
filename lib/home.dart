@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:math';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:untitled_project/agora_functions.dart';
 import 'package:untitled_project/splash.dart';
@@ -91,6 +91,8 @@ class _HomeState extends State<Home> {
     await AgoraFunctions.initializeEngine();
     await AgoraFunctions.setEventHandler(
       joinChannelSuccess: (RtcConnection connection, int elapsed){
+        // AgoraFunctions.changeRole();
+        AgoraFunctions.sendStreamMessage(userModel.id);
         logs.add(Log("channel joined!", Colors.green.shade900));
         startAudioRecording();
         if (userModel.name != "admin") {
@@ -130,6 +132,10 @@ class _HomeState extends State<Home> {
         logs.add(Log("channel left!", Colors.green.shade900));
         logs.add(Log("users count: ${stats.userCount}", Colors.black));
       },
+      messageReceived: (RtcConnection connection, int uid, int streamId, Uint8List data, int byte, int time){
+        logs.add(Log("message received!", Colors.green.shade900));
+        logs.add(Log("user joined: ${String.fromCharCodes(data)}", Colors.black));
+      }
     );
   }
 
@@ -336,7 +342,7 @@ class _HomeState extends State<Home> {
         userModel = user;
         isRegistered = true;
       });
-      await AgoraFunctions.joinChannel(token: agoraToken, channelName: 'test', userId: Random().nextInt(999),);
+      await AgoraFunctions.joinChannel(token: agoraToken, channelName: 'test', userId: user.id);
     },
     );
   }
@@ -377,13 +383,13 @@ class _HomeState extends State<Home> {
   }
 
   removeUser(int index) async {
-    await Future.delayed(const Duration(seconds: 2));
-    try{
-      var shouldRemove = selectedUserId != users[index].id && !joinedUsersIds.contains(users[index].id);
-      if(shouldRemove){
-        FirebaseDatabase.instance.ref().child('demo').child('users').child(users[index].key).remove();
-      }
-    } catch(_){}
+    // await Future.delayed(const Duration(seconds: 2));
+    // try{
+    //   var shouldRemove = selectedUserId != users[index].id && !joinedUsersIds.contains(users[index].id);
+    //   if(shouldRemove){
+    //     FirebaseDatabase.instance.ref().child('demo').child('users').child(users[index].key).remove();
+    //   }
+    // } catch(_){}
   }
 
   muteUser(int uid) async {
