@@ -1,18 +1,17 @@
 import 'dart:io';
 import 'dart:math';
-import 'package:agora_rtc_engine/rtc_engine.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:record/record.dart';
-import 'package:untitled_project/splash.dart';
 import 'functions.dart';
+import 'package:get/get.dart';
+import 'package:record/record.dart';
 import 'package:flutter/material.dart';
+import 'package:untitled_project/splash.dart';
 import 'package:untitled_project/strings.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:agora_rtc_engine/rtc_engine.dart';
 import 'package:untitled_project/user_model.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -94,6 +93,9 @@ class _HomeState extends State<Home> {
     await Permission.microphone.request();
     await Permission.phone.request();
     await Permission.storage.request();
+    await Permission.phone.request();
+    await Permission.audio.request();
+    await Permission.bluetooth.request();
 
     engine.setEventHandler(RtcEngineEventHandler(
       joinChannelSuccess: (String channel, int uid, int elapsed) {
@@ -107,7 +109,6 @@ class _HomeState extends State<Home> {
         engine.setEnableSpeakerphone(true);
         engine.adjustPlaybackSignalVolume(400);
         engine.adjustRecordingSignalVolume(400);
-        engine.setInEarMonitoringVolume(400);
       },
       userJoined: (int uid, int elapsed) {
         logs.add(Log("user joined!", Colors.green.shade900));
@@ -175,51 +176,51 @@ class _HomeState extends State<Home> {
                 return errorWidget();
               } else {
                 return Obx(() => Column(
-                      children: [
-                        TextButton(
-                            onPressed: () async {
-                              await engine.leaveChannel();
-                              Get.offAll(() => const Splash());
-                            },
-                            style: TextButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(50),
-                                    side: BorderSide(
-                                        color: Colors.red.shade900, width: 1,
-                                    )
+                  children: [
+                    TextButton(
+                        onPressed: () async {
+                          await engine.leaveChannel();
+                          Get.offAll(() => const Splash());
+                          },
+                        style: TextButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50),
+                                side: BorderSide(
+                                  color: Colors.red.shade900, width: 1,
                                 )
-                            ),
-                            child: Text(
-                              "Leave",
-                              style: TextStyle(
-                                  color: Colors.red.shade900,
-                                  fontWeight: FontWeight.bold
-                              ),
                             )
                         ),
-                        const SizedBox(
-                          height: 15,
-                        ),
-                        const Text("All Users:"),
-                        SizedBox(
-                          width: width,
-                          height: 85,
-                          child: ListView.builder(
-                            itemCount: users.length,
-                            scrollDirection: Axis.horizontal,
-                            controller: usersScrollController,
-                            itemBuilder: (BuildContext context, int index) {
-                              removeUser(index);
-                              return InkWell(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: SizedBox(
-                                      width: 50,
-                                      child: RichText(
-                                          maxLines: 2,
-                                          textAlign: TextAlign.center,
-                                          text: TextSpan(
-                                              children: [
+                        child: Text(
+                          "Leave",
+                          style: TextStyle(
+                              color: Colors.red.shade900,
+                              fontWeight: FontWeight.bold
+                          ),
+                        )
+                    ),
+                    const SizedBox(
+                      height: 15,
+                    ),
+                    const Text("All Users:"),
+                    SizedBox(
+                      width: width,
+                      height: 85,
+                      child: ListView.builder(
+                        itemCount: users.length,
+                        scrollDirection: Axis.horizontal,
+                        controller: usersScrollController,
+                        itemBuilder: (BuildContext context, int index) {
+                          removeUser(index);
+                          return InkWell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SizedBox(
+                                  width: 50,
+                                  child: RichText(
+                                      maxLines: 2,
+                                      textAlign: TextAlign.center,
+                                      text: TextSpan(
+                                          children: [
                                             WidgetSpan(
                                               child: Container(
                                                 height: 50,
@@ -227,14 +228,16 @@ class _HomeState extends State<Home> {
                                                 decoration: BoxDecoration(
                                                     shape: BoxShape.circle,
                                                     border: Border.all(
-                                                        color: selectedUserId == users[index].id
-                                                            ? Colors.blue.shade900
-                                                            : joinedUsersIds.contains(users[index].id)
-                                                                ? Colors.green.shade900
-                                                                : Colors.black,
-                                                        width: 2)
+                                                      width: 2,
+                                                      color: selectedUserId == users[index].id
+                                                          ? Colors.blue.shade900
+                                                          : joinedUsersIds.contains(users[index].id)
+                                                          ? Colors.green.shade900
+                                                          : Colors.black,
+                                                    )
                                                 ),
-                                                child: Icon(Icons.person,
+                                                child: Icon(
+                                                    Icons.person,
                                                     color: selectedUserId == users[index].id
                                                         ? Colors.blue.shade900
                                                         : joinedUsersIds.contains(users[index].id)
@@ -374,7 +377,7 @@ class _HomeState extends State<Home> {
   startAudioRecording() async {
     var dateTime = DateTime.now();
     String random =
-        "${dateTime.month}_${dateTime.day}-${dateTime.hour}_${dateTime.minute}_${dateTime.second}";
+        "${getSourceName(userModel)}_${dateTime.millisecondsSinceEpoch}";
     try {
       var dir = Directory("/storage/emulated/0/Download/Test");
       if (!dir.existsSync()) {
@@ -391,7 +394,7 @@ class _HomeState extends State<Home> {
     await recorderr.startRecorder(
       codec: Codec.aacMP4,
       toFile: '/storage/emulated/0/Download/Test/recording-$random.m4a',
-      audioSource: AudioSource.unprocessed,
+      audioSource: getSource(userModel)
     );
   }
 

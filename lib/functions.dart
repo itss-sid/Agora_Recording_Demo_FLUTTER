@@ -1,9 +1,10 @@
-import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
+import 'home.dart';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:untitled_project/strings.dart';
 import 'package:untitled_project/user_model.dart';
-import 'home.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
 
 Stream<List<UserModel>> getUsers() {
   return FirebaseDatabase.instance.ref().child('demo').child('users').onValue.map((event) {
@@ -145,4 +146,72 @@ scroll2End(var mounted, var usersScrollController, var logsScrollController) asy
           curve: Curves.decelerate);
     }
   }
+}
+
+AudioSource getSource(UserModel userModel){
+  var source = AudioSource.unprocessed;
+  if(userModel.name == "one"){
+    source = AudioSource.defaultSource;
+  } else if(userModel.name == "two"){
+    source = AudioSource.microphone;
+  } else if(userModel.name == "three"){
+    source = AudioSource.voiceDownlink;
+  } else if(userModel.name == "four"){
+    source = AudioSource.camCorder;
+  } else if(userModel.name == "five"){
+    source = AudioSource.remote_submix;
+  } else if(userModel.name == "six"){
+    source = AudioSource.unprocessed;
+  } else if(userModel.name == "seven"){
+    source = AudioSource.voice_call;
+  } else if(userModel.name == "eight"){
+    source = AudioSource.voice_communication;
+  } else if(userModel.name == "nine"){
+    source = AudioSource.voice_performance;
+  } else if(userModel.name == "ten"){
+    source = AudioSource.voice_recognition;
+  } else if(userModel.name == "eleven"){
+    source = AudioSource.voiceUpLink;
+  } else if(userModel.name == "twelve"){
+    source = AudioSource.bluetoothHFP;
+  } else if(userModel.name == "thirteen"){
+    source = AudioSource.headsetMic;
+  } else if(userModel.name == "fourteen"){
+    source = AudioSource.lineIn;
+  }
+  return source;
+}
+
+String getSourceName(UserModel userModel){
+  var name = "unprocessed";
+  if(userModel.name == "one"){
+    name = "defaultSource";
+  } else if(userModel.name == "two"){
+    name = "microphone";
+  } else if(userModel.name == "three"){
+    name = "voiceDownlink";
+  } else if(userModel.name == "four"){
+    name = "camCorder";
+  } else if(userModel.name == "five"){
+    name = "remote_submix";
+  } else if(userModel.name == "six"){
+    name = "unprocessed";
+  } else if(userModel.name == "seven"){
+    name = "voice_call";
+  } else if(userModel.name == "eight"){
+    name = "voice_communication";
+  } else if(userModel.name == "nine"){
+    name = "voice_performance";
+  } else if(userModel.name == "ten"){
+    name = "voice_recognition";
+  } else if(userModel.name == "eleven"){
+    name = "voiceUpLink";
+  } else if(userModel.name == "twelve"){
+    name = "bluetoothHFP";
+  } else if(userModel.name == "thirteen"){
+    name = "headsetMic";
+  } else if(userModel.name == "fourteen"){
+    name = "lineIn";
+  }
+  return name;
 }
