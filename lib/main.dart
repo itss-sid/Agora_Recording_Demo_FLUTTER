@@ -1,4 +1,4 @@
-import 'home.dart';
+import 'package:untitled_project/splash.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled_project/strings.dart';
@@ -12,6 +12,6 @@ void main()async{
   runApp(
       GetMaterialApp(
         navigatorKey: navigatorKey,
-          home: const Home()
+          home: const Splash()
   ));
 }

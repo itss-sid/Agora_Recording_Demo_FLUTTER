@@ -46,6 +46,7 @@ dependencies:
   record: ^4.4.2
   audio_session: ^0.1.10
   flutter_sound: ^9.2.13
+  dio: ^4.0.6
 
 dev_dependencies:
   flutter_test:

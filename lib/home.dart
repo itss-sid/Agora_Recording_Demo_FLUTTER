@@ -41,7 +41,7 @@ class _HomeState extends State<Home> {
   void initState() {
     openTheRecorder();
     initializeAgora();
-    getAgoraToken();
+    // getAgoraToken();
     super.initState();
   }
 
@@ -157,7 +157,7 @@ class _HomeState extends State<Home> {
     //     clientRoleType: ClientRoleType.clientRoleAudience
     //   ),
     // );
-    await engine.joinChannel(agoraToken, 'test', null, userModel.id, ChannelMediaOptions());
+    await engine.joinChannel(agoraToken, "123456", null, userModel.id, ChannelMediaOptions());
   }
 
   Widget streamBuilder() {
@@ -179,7 +179,11 @@ class _HomeState extends State<Home> {
                   children: [
                     TextButton(
                         onPressed: () async {
-                          await engine.leaveChannel();
+                          // try{
+                          //   await engine.leaveChannel();
+                          // } catch(e){
+                          //   print("ErrorOnLeaveChannel ----> $e");
+                          // }
                           Get.offAll(() => const Splash());
                           },
                         style: TextButton.styleFrom(
@@ -204,7 +208,7 @@ class _HomeState extends State<Home> {
                     const Text("All Users:"),
                     SizedBox(
                       width: width,
-                      height: 85,
+                      height: 100,
                       child: ListView.builder(
                         itemCount: users.length,
                         scrollDirection: Axis.horizontal,
@@ -217,10 +221,19 @@ class _HomeState extends State<Home> {
                               child: SizedBox(
                                   width: 50,
                                   child: RichText(
-                                      maxLines: 2,
                                       textAlign: TextAlign.center,
                                       text: TextSpan(
                                           children: [
+                                            TextSpan(
+                                                text: "${users[index].id}\n",
+                                                style: TextStyle(
+                                                    color: selectedUserId == users[index].id
+                                                        ? Colors.blue.shade900
+                                                        : joinedUsersIds.contains(users[index].id)
+                                                        ? Colors.green.shade900
+                                                        : Colors.black
+                                                )
+                                            ),
                                             WidgetSpan(
                                               child: Container(
                                                 height: 50,

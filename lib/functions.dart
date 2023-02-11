@@ -1,4 +1,4 @@
-import 'home.dart';
+import 'package:untitled_project/splash.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled_project/strings.dart';
@@ -27,7 +27,7 @@ Widget errorWidget(){
                 const TextSpan(text: "ERROR HAS OCCURRED\n", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),),
                 WidgetSpan(child: IconButton(
                     onPressed: (){
-                      Get.offAll(()=>const Home());
+                      Get.offAll(()=>const Splash());
                     },
                     iconSize: 50,
                     icon: const Icon(Icons.refresh)
@@ -67,11 +67,11 @@ Widget micWidget(bool isOn){
   );
 }
 
-Future<String> getAgoraToken() async {
-  var snapshot = await FirebaseDatabase.instance.ref("agora").get();
-  agoraToken = snapshot.value as String;
-  return agoraToken;
-}
+// Future<String> getAgoraToken() async {
+//   var snapshot = await FirebaseDatabase.instance.ref("agora").get();
+//   agoraToken = snapshot.value as String;
+//   return agoraToken;
+// }
 
 Widget registrationLayout(Function(String text) onChanged, Function()? onPressed){
   return Center(
